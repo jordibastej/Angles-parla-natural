@@ -971,4 +971,7 @@ Respon ÚNICAMENT en un objecte JSON rigorós amb el següent format sense codi 
       </footer>
     </div>
   );
-}
+} 
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
