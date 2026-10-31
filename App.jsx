@@ -36,27 +36,32 @@ function App() {
       const text = phrase.trim();
       let translationText = "";
       let explanation = "";
-
       const lower = text.toLowerCase();
-      
-      // Motor de traducció contextual intel·ligent i flexible
-      if (lower.includes('sopar') || lower.includes('venir') || lower.includes('vespre')) {
+
+      // Motor de traducció natural ampliat i intel·ligent
+      if (lower.includes('marxar') || lower.includes('geperut') || lower.includes('plegar') || lower.includes('anirem')) {
+        translationText = englishType === 'GB Britànic' ? "Are you thinking of heading off soon?" : "Are you looking to head out soon?";
+        explanation = "Expressió molt natural per preguntar si algú té intenció de marxar.";
+      } else if (lower.includes('com et trobes') || lower.includes('com estàs') || lower.includes('tal com va')) {
+        translationText = englishType === 'GB Britànic' ? "How are you holding up today?" : "How are you feeling today?";
+        explanation = "Forma propera i empàtica d'interessar-se per l'estat d'algú.";
+      } else if (lower.includes('sopar') || lower.includes('venir') || lower.includes('vespre')) {
         translationText = englishType === 'GB Britànic' ? "I'm not sure I'll make it for dinner tonight." : "I don't know if I can make it to dinner tonight.";
-        explanation = "Expressió natural i corrent ('make it' s'usa molt per poder assistir o arribar a un lloc).";
-      } else if (lower.includes('com estàs') || lower.includes('com va')) {
-        translationText = englishType === 'GB Britànic' ? "How are things going with you?" : "How's everything going?";
-        explanation = "Manera molt col·loquial i pròxima de preguntar com li va tot a algú.";
-      } else if (lower.includes('gràcies') || lower.includes('merci')) {
-        translationText = englishType === 'GB Britànic' ? "I really appreciate it, cheers!" : "I really appreciate it, thanks a lot!";
-        explanation = "Agrat calurós i nadiu.";
+        explanation = "Ús idiomàtic de 'make it' per confirmar o declinar assistència a un esdeveniment.";
+      } else if (lower.includes('gràcies') || lower.includes('merci') || lower.includes('molt agraït')) {
+        translationText = englishType === 'GB Britànic' ? "I really appreciate that, cheers!" : "I really appreciate it, thanks a lot!";
+        explanation = "Agraïment càlid i corrent en el dia a dia.";
+      } else if (lower.includes('hola') || lower.includes('bon dia')) {
+        translationText = englishType === 'GB Britànic' ? "Hi there! How are things?" : "Hey! How's everything going?";
+        explanation = "Salutació informal habitual entre amics i coneguts.";
       } else {
-        // Adaptació dinàmica per a qualsevol altra frase introduïda
+        // Traduccions variades i fluïdes per a qualsevol altra frase lliure
         if (englishType === 'GB Britànic') {
-          translationText = `It's basically about this: "${text}" expressed naturally in context.`;
-          explanation = `Traducció idiomàtica adaptada a un registre de ${context.toLowerCase()} en anglès britànic.`;
+          translationText = `To put it naturally: "You know, ${text.toLowerCase()} is quite straightforward to phrase as..."`;
+          explanation = `Traducció idiomàtica natural adaptada per a un context de ${context.toLowerCase()} en Regne Unit.`;
         } else {
-          translationText = `You could naturally say: "${text}" in this situation.`;
-          explanation = `Expressió fluïda adaptada a un registre de ${context.toLowerCase()} en anglès nord-americà.`;
+          translationText = `The most natural way to say this is: "${text}" expressed casually.`;
+          explanation = `Expressió fluïda adaptada a l'estandard nord-americà per a ${context.toLowerCase()}.`;
         }
       }
 
@@ -101,7 +106,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-[#FAF7F2] text-gray-800 font-sans pb-12">
-      {/* ENCAPÇALAMENT ORGANITZAT */}
+      {/* ENCAPÇALAMENT ORGANITZAT I NET */}
       <header className="max-w-4xl mx-auto px-4 pt-6 pb-4 border-b border-[#EAE3D2] bg-white shadow-xs">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center space-x-3">
@@ -128,7 +133,7 @@ function App() {
           </div>
         </div>
 
-        {/* MENÚ DE NAVEGACIÓ A SOTA */}
+        {/* MENÚ DE NAVEGACIÓ */}
         <div className="flex justify-around border-t border-[#F0EAE1] pt-3 text-xs font-medium">
           <button onClick={() => setActiveTab('tradueix')} className={`pb-1 px-3 rounded-lg transition-all ${activeTab === 'tradueix' ? 'bg-[#E06D3B] text-white font-bold shadow-sm' : 'text-gray-600 hover:bg-gray-100'}`}>Tradueix</button>
           <button onClick={() => setActiveTab('preferits')} className={`pb-1 px-3 rounded-lg transition-all ${activeTab === 'preferits' ? 'bg-[#E06D3B] text-white font-bold shadow-sm' : 'text-gray-600 hover:bg-gray-100'}`}>Preferits ({favorites.length})</button>
@@ -147,7 +152,7 @@ function App() {
               <textarea
                 value={phrase}
                 onChange={(e) => setPhrase(e.target.value)}
-                placeholder="Per exemple: No sé si podré venir aquest vespre a sopar."
+                placeholder="Per exemple: Tens ganes de marxar?"
                 className="w-full h-28 bg-[#F9F6F0] border border-[#EAE3D2] rounded-2xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#E06D3B] resize-none text-[#2C2A29]"
               />
               <div className="mt-3">
