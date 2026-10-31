@@ -1,7 +1,7 @@
 const { useState, useEffect } = React;
 
 function App() {
-  const [teamMembers, setTeamMembers] = useState(['Jordi', 'Marc', 'Laura', 'Pau', 'Anna']);
+  const [teamMembers, setTeamMembers] = useState(['Jordi', 'Esther', 'Pere']);
   const [activeTab, setActiveTab] = useState('tradueix');
   const [user, setUser] = useState(() => localStorage.getItem('current_user') || 'Jordi');
   const [showUserMenu, setShowUserMenu] = useState(false);
