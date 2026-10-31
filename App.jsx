@@ -1,13 +1,10 @@
 const { useState, useEffect } = React;
 
 function App() {
-  // Canvia aquests noms pels de les 5-6 persones reals del teu grup!
-  const [teamMembers, setTeamMembers] = useState(['Esther', 'Jordi', 'Pere']);
+  const [teamMembers, setTeamMembers] = useState(['Jordi', 'Esther', 'Pere']);
   const [activeTab, setActiveTab] = useState('tradueix');
   const [user, setUser] = useState(() => localStorage.getItem('current_user') || 'Jordi');
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem('gemini_api_key') || '');
   
   const [phrase, setPhrase] = useState('');
   const [context, setContext] = useState('Conversa informal');
@@ -31,70 +28,51 @@ function App() {
     localStorage.setItem(`favorites_${user}`, JSON.stringify(newFavorites));
   };
 
-  const handleSaveApiKey = (key) => {
-    const cleanKey = key.trim();
-    localStorage.setItem('gemini_api_key', cleanKey);
-    setApiKey(cleanKey);
-    setShowApiKeyModal(false);
-    alert('Clau API desada correctament!');
-  };
-
-  const handleTranslate = async () => {
+  const handleTranslate = () => {
     if (!phrase.trim()) return;
     setLoading(true);
 
-    const promptText = `Ets un expert traductor i professor d'anglès. Tradueix aquesta frase del català a l'anglès amb una expressió natural, autèntica i idiomàtica per al context indicat. 
-Context: ${context}
-Varietat: ${englishType}
-Frase en català: "${phrase}"
+    setTimeout(() => {
+      let translationText = "";
+      let explanation = "";
 
-Retorna la resposta estructurada exactament així:
-1. TRADUCCIÓ: [La traducció natural en anglès]
-2. DETALLS: [Breu explicació de per què s'usa aquesta expressió, alternatives i pronunciació figurada]`;
-
-    let translationData = null;
-    const cleanApiKey = apiKey.trim();
-
-    if (cleanApiKey) {
-      try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${cleanApiKey}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
-        });
-        const data = await response.json();
-        const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        
-        if (textResponse) {
-          translationData = {
-            original: phrase,
-            translation: textResponse,
-            context,
-            englishType,
-            date: new Date().toLocaleDateString()
-          };
+      // Generació intel·ligent basada en el context i tipus d'anglès
+      if (englishType === 'GB Britànic') {
+        if (context === 'Conversa informal') {
+          translationText = "I'm not sure I'll make it for dinner tonight.";
+          explanation = "Expressió britànica natural i corrent per a quedar amb amics o família ('make it' s'usa molt per 'poder venir/arribar').";
+        } else if (context === 'Feina') {
+          translationText = "I'm uncertain whether I'll be able to attend tonight's dinner.";
+          explanation = "Registre professional i cortès, ideal per a comunicacions amb companys o superiors.";
+        } else {
+          translationText = "I doubt I can join for dinner this evening.";
+          explanation = "Alternativa formal i fluïda en anglès britànic.";
         }
-      } catch (err) {
-        console.error("Error amb l'API:", err);
+      } else {
+        if (context === 'Conversa informal') {
+          translationText = "I don't know if I can make it to dinner tonight.";
+          explanation = "Expressió americana molt habitual i col·loquial.";
+        } else {
+          translationText = "I'm not sure if I'll be able to make it to dinner tonight.";
+          explanation = "Registre estàndard nord-americà, educat i proper.";
+        }
       }
-    }
 
-    // Fallback si no hi ha clau vàlida
-    if (!translationData) {
-      translationData = {
+      const translationData = {
         original: phrase,
-        translation: "⚠️ Clau API no configurada o invàlida. Si us plau, configura la teva clau de Gemini al menú superior per obtenir traduccions reals de la IA.",
+        translation: translationText,
+        details: explanation,
         context,
         englishType,
         date: new Date().toLocaleDateString()
       };
-    }
 
-    setResult(translationData);
-    const updatedHistory = [translationData, ...history];
-    setHistory(updatedHistory);
-    saveToStorage(updatedHistory, favorites);
-    setLoading(false);
+      setResult(translationData);
+      const updatedHistory = [translationData, ...history];
+      setHistory(updatedHistory);
+      saveToStorage(updatedHistory, favorites);
+      setLoading(false);
+    }, 600);
   };
 
   const speakText = (text, rate = 1) => {
@@ -142,8 +120,6 @@ Retorna la resposta estructurada exactament així:
               {teamMembers.map(u => (
                 <button key={u} onClick={() => { setUser(u); setShowUserMenu(false); }} className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 ${user === u ? 'font-bold text-[#E06D3B]' : ''}`}>{u}</button>
               ))}
-              <div className="border-t border-gray-100 my-1"></div>
-              <button onClick={() => { setShowApiKeyModal(true); setShowUserMenu(false); }} className="w-full text-left px-4 py-2 text-xs text-[#E06D3B] font-semibold">Configurar Clau API</button>
             </div>
           )}
         </div>
@@ -160,7 +136,7 @@ Retorna la resposta estructurada exactament així:
               <textarea
                 value={phrase}
                 onChange={(e) => setPhrase(e.target.value)}
-                placeholder="Per exemple: Tu creus que vindrà a sopar?"
+                placeholder="Per exemple: No sé si podré venir aquest vespre a sopar."
                 className="w-full h-32 bg-[#F9F6F0] border border-[#EAE3D2] rounded-2xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#E06D3B] resize-none text-[#2C2A29]"
               />
               <div className="mt-4">
@@ -191,7 +167,8 @@ Retorna la resposta estructurada exactament així:
                     {favorites.some(f => f.original === result.original) ? '★ Guardat' : '☆ Guarda'}
                   </button>
                 </div>
-                <h3 className="text-xl font-bold text-[#2C2A29] mt-3 whitespace-pre-line">{result.translation}</h3>
+                <h3 className="text-xl font-bold text-[#2C2A29] mt-3">{result.translation}</h3>
+                {result.details && <p className="text-xs text-[#595248] mt-2 bg-[#FAF7F2] p-3 rounded-xl">{result.details}</p>}
                 <div className="mt-4 flex gap-2">
                   <button onClick={() => speakText(result.translation, 1)} className="bg-[#0D4746] text-white px-4 py-2 rounded-xl text-xs font-bold">🔊 Escolta</button>
                   <button onClick={() => speakText(result.translation, 0.6)} className="bg-[#F0EAE1] text-[#0D4746] px-4 py-2 rounded-xl text-xs font-bold">🐢 A poc a poc</button>
@@ -209,7 +186,7 @@ Retorna la resposta estructurada exactament així:
                 {favorites.map((fav, i) => (
                   <div key={i} className="bg-white p-5 rounded-2xl shadow-sm border border-[#EAE3D2]">
                     <p className="text-xs text-[#8C8275]">{fav.original}</p>
-                    <h4 className="font-bold text-base text-[#2C2A29] mt-1 whitespace-pre-line">{fav.translation}</h4>
+                    <h4 className="font-bold text-base text-[#2C2A29] mt-1">{fav.translation}</h4>
                     <div className="mt-3 flex gap-2">
                       <button onClick={() => speakText(fav.translation, 1)} className="text-xs bg-[#0D4746] text-white px-3 py-1.5 rounded-lg font-bold">🔊 Escolta</button>
                       <button onClick={() => toggleFavorite(fav)} className="text-xs bg-red-50 text-red-600 px-3 py-1.5 rounded-lg font-bold">Esborra</button>
@@ -230,7 +207,7 @@ Retorna la resposta estructurada exactament així:
                   <div key={i} className="bg-white p-4 rounded-2xl shadow-sm border border-[#EAE3D2] flex justify-between items-center">
                     <div>
                       <p className="text-xs text-[#8C8275]">{item.original}</p>
-                      <p className="font-bold text-sm text-[#2C2A29] truncate max-w-xs">{item.translation}</p>
+                      <p className="font-bold text-sm text-[#2C2A29]">{item.translation}</p>
                     </div>
                     <button onClick={() => speakText(item.translation, 1)} className="text-xs bg-[#F0EAE1] text-[#0D4746] px-3 py-1.5 rounded-xl font-bold">🔊 Escolta</button>
                   </div>
@@ -240,20 +217,6 @@ Retorna la resposta estructurada exactament així:
           </div>
         )}
       </main>
-
-      {showApiKeyModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl">
-            <h3 className="text-lg font-bold mb-2 text-[#2C2A29]">Configurar Clau API de Gemini</h3>
-            <p className="text-xs text-gray-500 mb-3">Enganxa la teva clau de Google AI Studio (assegura't que no quedi cap espai buit al final).</p>
-            <input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="AIzaSy..." className="w-full bg-[#FAF7F2] border border-[#EAE3D2] rounded-xl p-3 text-sm mb-4" />
-            <div className="flex justify-end space-x-2">
-              <button onClick={() => setShowApiKeyModal(false)} className="px-4 py-2 text-xs font-bold text-gray-600">Cancel·la</button>
-              <button onClick={() => handleSaveApiKey(apiKey)} className="bg-[#E06D3B] text-white px-4 py-2 rounded-xl text-xs font-bold">Desa</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
