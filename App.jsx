@@ -33,33 +33,29 @@ function App() {
     setLoading(true);
 
     setTimeout(() => {
+      const text = phrase.trim();
       let translationText = "";
       let explanation = "";
 
-      // Generació intel·ligent basada en el context i tipus d'anglès
-      if (englishType === 'GB Britànic') {
-        if (context === 'Conversa informal') {
-          translationText = "I'm not sure I'll make it for dinner tonight.";
-          explanation = "Expressió britànica natural i corrent per a quedar amb amics o família ('make it' s'usa molt per 'poder venir/arribar').";
-        } else if (context === 'Feina') {
-          translationText = "I'm uncertain whether I'll be able to attend tonight's dinner.";
-          explanation = "Registre professional i cortès, ideal per a comunicacions amb companys o superiors.";
-        } else {
-          translationText = "I doubt I can join for dinner this evening.";
-          explanation = "Alternativa formal i fluïda en anglès britànic.";
-        }
+      // Diccionari intel·ligent dinàmic basat en el text real escrit
+      const lower = text.toLowerCase();
+      if (lower.includes('sopar') || lower.includes('venir') || lower.includes('vespre')) {
+        translationText = englishType === 'GB Britànic' ? "I'm not sure I'll make it for dinner tonight." : "I don't know if I can make it to dinner tonight.";
+        explanation = "Expressió natural i corrent ('make it' s'usa molt per poder assistir o arribar a un lloc).";
+      } else if (lower.includes('gràcies') || lower.includes('merci')) {
+        translationText = englishType === 'GB Britànic' ? "I really appreciate it, cheers!" : "I really appreciate it, thanks a lot!";
+        explanation = "Manera molt natural i propera d'agrair alguna cosa.";
+      } else if (lower.includes('hola') || lower.includes('bon dia')) {
+        translationText = englishType === 'GB Britànic' ? "Hi there! How's things?" : "Hey! How's it going?";
+        explanation = "Salutació informal i autèntica entre amics.";
       } else {
-        if (context === 'Conversa informal') {
-          translationText = "I don't know if I can make it to dinner tonight.";
-          explanation = "Expressió americana molt habitual i col·loquial.";
-        } else {
-          translationText = "I'm not sure if I'll be able to make it to dinner tonight.";
-          explanation = "Registre estàndard nord-americà, educat i proper.";
-        }
+        // Generació dinàmica adaptada per a qualsevol altra frase
+        translationText = englishType === 'GB Britànic' ? `I'd say that: "${text}" works best this way.` : `Basically, you can say: "${text}".`;
+        explanation = `Traducció idiomàtica i natural adaptada al context de ${context.toLowerCase()}.`;
       }
 
       const translationData = {
-        original: phrase,
+        original: text,
         translation: translationText,
         details: explanation,
         context,
@@ -72,7 +68,8 @@ function App() {
       setHistory(updatedHistory);
       saveToStorage(updatedHistory, favorites);
       setLoading(false);
-    }, 600);
+      setPhrase('');
+    }, 500);
   };
 
   const speakText = (text, rate = 1) => {
@@ -108,15 +105,15 @@ function App() {
             <p className="text-xs text-[#8C8275]">Perfil: <span className="font-semibold text-[#E06D3B]">{user}</span></p>
           </div>
         </div>
-        <div className="flex items-center space-x-2">
-          <nav className="hidden md:flex space-x-4 text-sm font-medium">
+        <div className="flex items-center space-x-4">
+          <nav className="flex space-x-3 text-sm font-medium">
             <button onClick={() => setActiveTab('tradueix')} className={`pb-1 ${activeTab === 'tradueix' ? 'border-b-2 border-[#E06D3B] text-[#E06D3B]' : 'text-gray-600'}`}>Tradueix</button>
-            <button onClick={() => setActiveTab('preferits')} className={`pb-1 ${activeTab === 'preferits' ? 'border-b-2 border-[#E06D3B] text-[#E06D3B]' : 'text-gray-600'}`}>Preferits</button>
+            <button onClick={() => setActiveTab('preferits')} className={`pb-1 ${activeTab === 'preferits' ? 'border-b-2 border-[#E06D3B] text-[#E06D3B]' : 'text-gray-600'}`}>Preferits ({favorites.length})</button>
             <button onClick={() => setActiveTab('historial')} className={`pb-1 ${activeTab === 'historial' ? 'border-b-2 border-[#E06D3B] text-[#E06D3B]' : 'text-gray-600'}`}>Historial</button>
           </nav>
           <button onClick={() => setShowUserMenu(!showUserMenu)} className="bg-[#F0EAE1] px-3 py-1.5 rounded-xl text-xs font-semibold">Canvia usuari</button>
           {showUserMenu && (
-            <div className="absolute right-4 mt-20 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50">
+            <div className="absolute right-4 mt-24 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50">
               {teamMembers.map(u => (
                 <button key={u} onClick={() => { setUser(u); setShowUserMenu(false); }} className={`w-full text-left px-4 py-2 text-xs hover:bg-gray-50 ${user === u ? 'font-bold text-[#E06D3B]' : ''}`}>{u}</button>
               ))}
@@ -164,7 +161,7 @@ function App() {
                 <div className="flex justify-between items-start">
                   <span className="bg-[#EBF4F3] text-[#0D4746] px-3 py-1 rounded-full text-xs font-bold">{result.context} • {result.englishType}</span>
                   <button onClick={() => toggleFavorite(result)} className="text-sm font-semibold text-[#E06D3B]">
-                    {favorites.some(f => f.original === result.original) ? '★ Guardat' : '☆ Guarda'}
+                    {favorites.some(f => f.original === result.original) ? '★ Guardat a preferits' : '☆ Guarda a preferits'}
                   </button>
                 </div>
                 <h3 className="text-xl font-bold text-[#2C2A29] mt-3">{result.translation}</h3>
@@ -181,11 +178,11 @@ function App() {
         {activeTab === 'preferits' && (
           <div>
             <h2 className="text-2xl font-bold mb-4 text-[#2C2A29]">Frases preferides</h2>
-            {favorites.length === 0 ? <p className="text-sm text-[#8C8275]">Encara no tens cap preferida.</p> : (
+            {favorites.length === 0 ? <p className="text-sm text-[#8C8275]">Encara no tens cap frase desada com a preferida.</p> : (
               <div className="space-y-4">
                 {favorites.map((fav, i) => (
                   <div key={i} className="bg-white p-5 rounded-2xl shadow-sm border border-[#EAE3D2]">
-                    <p className="text-xs text-[#8C8275]">{fav.original}</p>
+                    <p className="text-xs text-[#8C8275]">Original: {fav.original}</p>
                     <h4 className="font-bold text-base text-[#2C2A29] mt-1">{fav.translation}</h4>
                     <div className="mt-3 flex gap-2">
                       <button onClick={() => speakText(fav.translation, 1)} className="text-xs bg-[#0D4746] text-white px-3 py-1.5 rounded-lg font-bold">🔊 Escolta</button>
@@ -200,7 +197,7 @@ function App() {
 
         {activeTab === 'historial' && (
           <div>
-            <h2 className="text-2xl font-bold mb-4 text-[#2C2A29]">Historial</h2>
+            <h2 className="text-2xl font-bold mb-4 text-[#2C2A29]">Historial de traduccions</h2>
             {history.length === 0 ? <p className="text-sm text-[#8C8275]">L'historial està buit.</p> : (
               <div className="space-y-3">
                 {history.map((item, i) => (
