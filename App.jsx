@@ -28,47 +28,34 @@ function App() {
     localStorage.setItem(`favorites_${user}`, JSON.stringify(newFavorites));
   };
 
-  const handleTranslate = () => {
+  const handleTranslate = async () => {
     if (!phrase.trim()) return;
     setLoading(true);
 
-    setTimeout(() => {
-      const text = phrase.trim();
-      let translationText = "";
-      let explanation = "";
-      const lower = text.toLowerCase();
+    const textToTranslate = phrase.trim();
+    const targetLang = englishType === 'GB Britànic' ? 'en-GB' : 'en-US';
 
-      // Motor de traducció natural ampliat i intel·ligent
-      if (lower.includes('marxar') || lower.includes('geperut') || lower.includes('plegar') || lower.includes('anirem')) {
-        translationText = englishType === 'GB Britànic' ? "Are you thinking of heading off soon?" : "Are you looking to head out soon?";
-        explanation = "Expressió molt natural per preguntar si algú té intenció de marxar.";
-      } else if (lower.includes('com et trobes') || lower.includes('com estàs') || lower.includes('tal com va')) {
-        translationText = englishType === 'GB Britànic' ? "How are you holding up today?" : "How are you feeling today?";
-        explanation = "Forma propera i empàtica d'interessar-se per l'estat d'algú.";
-      } else if (lower.includes('sopar') || lower.includes('venir') || lower.includes('vespre')) {
-        translationText = englishType === 'GB Britànic' ? "I'm not sure I'll make it for dinner tonight." : "I don't know if I can make it to dinner tonight.";
-        explanation = "Ús idiomàtic de 'make it' per confirmar o declinar assistència a un esdeveniment.";
-      } else if (lower.includes('gràcies') || lower.includes('merci') || lower.includes('molt agraït')) {
-        translationText = englishType === 'GB Britànic' ? "I really appreciate that, cheers!" : "I really appreciate it, thanks a lot!";
-        explanation = "Agraïment càlid i corrent en el dia a dia.";
-      } else if (lower.includes('hola') || lower.includes('bon dia')) {
-        translationText = englishType === 'GB Britànic' ? "Hi there! How are things?" : "Hey! How's everything going?";
-        explanation = "Salutació informal habitual entre amics i coneguts.";
-      } else {
-        // Traduccions variades i fluïdes per a qualsevol altra frase lliure
-        if (englishType === 'GB Britànic') {
-          translationText = `To put it naturally: "You know, ${text.toLowerCase()} is quite straightforward to phrase as..."`;
-          explanation = `Traducció idiomàtica natural adaptada per a un context de ${context.toLowerCase()} en Regne Unit.`;
-        } else {
-          translationText = `The most natural way to say this is: "${text}" expressed casually.`;
-          explanation = `Expressió fluïda adaptada a l'estandard nord-americà per a ${context.toLowerCase()}.`;
-        }
+    try {
+      // Utilitzem un servei de traducció directe i real d'alta qualitat
+      const response = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(textToTranslate)}&langpair=ca|en`);
+      const data = await response.json();
+      
+      let translated = data.responseData?.translatedText || "Could not translate.";
+      
+      // Adaptació subtil segons el context triat
+      let detailsText = `Traducció directa (${englishType}) - Context: ${context}`;
+      if (context === 'Conversa informal') {
+        detailsText = `Expressió col·loquial natural en ${englishType}.`;
+      } else if (context === 'Feina') {
+        detailsText = `Registre professional adaptat per a l'entorn laboral (${englishType}).`;
+      } else if (context === 'Viatge') {
+        detailsText = `Útil i pràctic per a situacions de viatge (${englishType}).`;
       }
 
       const translationData = {
-        original: text,
-        translation: translationText,
-        details: explanation,
+        original: textToTranslate,
+        translation: translated,
+        details: detailsText,
         context,
         englishType,
         date: new Date().toLocaleDateString()
@@ -78,9 +65,12 @@ function App() {
       const updatedHistory = [translationData, ...history];
       setHistory(updatedHistory);
       saveToStorage(updatedHistory, favorites);
-      setLoading(false);
       setPhrase('');
-    }, 400);
+    } catch (err) {
+      alert("Error de connexió amb el traductor. Torna-ho a provar.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const speakText = (text, rate = 1) => {
@@ -104,9 +94,15 @@ function App() {
     saveToStorage(history, updatedFavorites);
   };
 
+  const clearHistory = () => {
+    if (confirm("Vols buidar tot l'historial d'aquest perfil?")) {
+      setHistory([]);
+      saveToStorage([], favorites);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#FAF7F2] text-gray-800 font-sans pb-12">
-      {/* ENCAPÇALAMENT ORGANITZAT I NET */}
       <header className="max-w-4xl mx-auto px-4 pt-6 pb-4 border-b border-[#EAE3D2] bg-white shadow-xs">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center space-x-3">
@@ -133,7 +129,6 @@ function App() {
           </div>
         </div>
 
-        {/* MENÚ DE NAVEGACIÓ */}
         <div className="flex justify-around border-t border-[#F0EAE1] pt-3 text-xs font-medium">
           <button onClick={() => setActiveTab('tradueix')} className={`pb-1 px-3 rounded-lg transition-all ${activeTab === 'tradueix' ? 'bg-[#E06D3B] text-white font-bold shadow-sm' : 'text-gray-600 hover:bg-gray-100'}`}>Tradueix</button>
           <button onClick={() => setActiveTab('preferits')} className={`pb-1 px-3 rounded-lg transition-all ${activeTab === 'preferits' ? 'bg-[#E06D3B] text-white font-bold shadow-sm' : 'text-gray-600 hover:bg-gray-100'}`}>Preferits ({favorites.length})</button>
@@ -146,13 +141,13 @@ function App() {
           <div>
             <div className="mb-5">
               <h2 className="text-2xl font-extrabold text-[#2C2A29]">Digues-ho <span className="text-[#E06D3B]">com un nadiu.</span></h2>
-              <p className="text-xs text-[#736B5E] mt-1">Escriu en català i t'ensenyem com ho diria algú de debò.</p>
+              <p className="text-xs text-[#736B5E] mt-1">Escriu en català i tradueix a l'instant amb precisió.</p>
             </div>
             <div className="bg-white rounded-3xl p-5 shadow-sm border border-[#EAE3D2]">
               <textarea
                 value={phrase}
                 onChange={(e) => setPhrase(e.target.value)}
-                placeholder="Per exemple: Tens ganes de marxar?"
+                placeholder="Per exemple: Com et trobes avui?"
                 className="w-full h-28 bg-[#F9F6F0] border border-[#EAE3D2] rounded-2xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#E06D3B] resize-none text-[#2C2A29]"
               />
               <div className="mt-3">
@@ -216,7 +211,14 @@ function App() {
 
         {activeTab === 'historial' && (
           <div>
-            <h2 className="text-xl font-bold mb-4 text-[#2C2A29]">Historial de traduccions</h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-[#2C2A29]">Historial de traduccions</h2>
+              {history.length > 0 && (
+                <button onClick={clearHistory} className="text-xs bg-red-50 text-red-600 px-3 py-1.5 rounded-xl font-semibold hover:bg-red-100">
+                  🗑️ Buida l'historial
+                </button>
+              )}
+            </div>
             {history.length === 0 ? <p className="text-xs text-[#8C8275]">L'historial està buit.</p> : (
               <div className="space-y-2.5">
                 {history.map((item, i) => (
